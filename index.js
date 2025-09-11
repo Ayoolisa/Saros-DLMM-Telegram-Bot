@@ -1,4 +1,5 @@
-// index.js: Telegram bot for Saros DLMM liquidity pool management (webhook mode)
+// index.js: Telegram bot for Saros DLMM liquidity pool management (webhook mode with Express)
+import express from 'express';
 import TelegramBot from 'node-telegram-bot-api';
 import { PublicKey } from '@solana/web3.js';
 import { connection, userWallets, getUserWallet } from './utils.js';
@@ -6,8 +7,38 @@ import { connection, userWallets, getUserWallet } from './utils.js';
 // Your Telegram bot token
 const token = '8489885216:AAHKortMPZFzWM1tIECjFW41YSXVORpl9dA';
 
-// Create bot without polling (webhooks enabled on Render)
+// Initialize Express app
+const app = express();
+app.use(express.json());
+
+// Create bot with webhook mode (no polling)
 const bot = new TelegramBot(token, { webHook: true });
+
+// Error handling to keep the process alive
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error.message);
+});
+
+// Webhook endpoint to receive Telegram updates
+app.post('/bot', (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200); // Acknowledge receipt
+});
+
+// Start server on the port Render provides (or 3000 locally)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Bot server running on port ${PORT}`);
+});
+
+// Set webhook URL (run this once, or handle dynamically)
+bot.setWebHook(`https://your-app.onrender.com/bot`) // Replace with your Render URL
+  .then(() => console.log('Webhook set successfully'))
+  .catch((error) => console.error('Webhook setup error:', error.message));
 
 // Log incoming messages
 bot.on('message', (msg) => {
@@ -18,7 +49,8 @@ bot.on('message', (msg) => {
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} sent /start`);
-  bot.sendMessage(chatId, 'Welcome to Saros LP Bot! Commands:\n/connectwallet <your_solana_pubkey>\n/pools\n/createposition <pool_address> <lower_price> <upper_price> <liquidity_amount>\n/addliquidity <pool_address> <amount_x> <amount_y>\n/removeliquidity <pool_address> <position_id> <remove_percentage>\n/monitor <pool_address>\n/help');
+  bot.sendMessage(chatId, 'Welcome to Saros LP Bot! Commands:\n/connectwallet <your_solana_pubkey>\n/pools\n/createposition <pool_address> <lower_price> <upper_price> <liquidity_amount>\n/addliquidity <pool_address> <amount_x> <amount_y>\n/removeliquidity <pool_address> <position_id> <remove_percentage>\n/monitor <pool_address>\n/help')
+    .catch((error) => console.log(`SendMessage error for ${chatId}: ${error.message}`));
 });
 
 // Handle /help
