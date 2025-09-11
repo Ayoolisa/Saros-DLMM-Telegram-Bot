@@ -1,37 +1,34 @@
-// index.js: Telegram bot for Saros DLMM liquidity pool management (minimal demo with error handling)
+// index.js: Telegram bot for Saros DLMM liquidity pool management (webhook mode)
 import TelegramBot from 'node-telegram-bot-api';
 import { PublicKey } from '@solana/web3.js';
 import { connection, userWallets, getUserWallet } from './utils.js';
 
+// Your Telegram bot token
 const token = '8489885216:AAHKortMPZFzWM1tIECjFW41YSXVORpl9dA';
-const bot = new TelegramBot(token, { polling: true });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
+// Create bot without polling (webhooks enabled on Render)
+const bot = new TelegramBot(token, { webHook: true });
 
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error.message);
-  // Optionally restart logic here, but we'll use a manager instead
-});
-
+// Log incoming messages
 bot.on('message', (msg) => {
   console.log(`Received message from chat ${msg.chat.id}: ${msg.text}`);
 });
 
+// Handle /start
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} sent /start`);
-  bot.sendMessage(chatId, 'Welcome to Saros LP Bot! Commands:\n/connectwallet <your_solana_pubkey>\n/pools\n/createposition <pool_address> <lower_price> <upper_price> <liquidity_amount>\n/addliquidity <pool_address> <amount_x> <amount_y>\n/removeliquidity <pool_address> <position_id> <remove_percentage>\n/monitor <pool_address>\n/help')
-    .catch((error) => console.log(`SendMessage error for ${chatId}: ${error.message}`));
+  bot.sendMessage(chatId, 'Welcome to Saros LP Bot! Commands:\n/connectwallet <your_solana_pubkey>\n/pools\n/createposition <pool_address> <lower_price> <upper_price> <liquidity_amount>\n/addliquidity <pool_address> <amount_x> <amount_y>\n/removeliquidity <pool_address> <position_id> <remove_percentage>\n/monitor <pool_address>\n/help');
 });
 
+// Handle /help
 bot.onText(/\/help/, (msg) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} sent /help`);
   bot.sendMessage(chatId, 'Saros LP Bot manages DLMM positions.\n1. Connect: /connectwallet <pubkey>\n2. List pools: /pools\n3. Create: /createposition <pool> <lower> <upper> <liquidity>\n4. Manage: /addliquidity, /removeliquidity\n5. Monitor: /monitor <pool>');
 });
 
+// Handle /connectwallet
 bot.onText(/\/connectwallet (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} sent /connectwallet`);
@@ -47,6 +44,7 @@ bot.onText(/\/connectwallet (.+)/, (msg, match) => {
   }
 });
 
+// Handle /pools (mocked)
 bot.onText(/\/pools/, async (msg) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} sent /pools`);
@@ -54,6 +52,7 @@ bot.onText(/\/pools/, async (msg) => {
   console.log('Mock pools sent to user ' + chatId);
 });
 
+// Handle /createposition (mocked)
 bot.onText(/\/createposition (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} sent /createposition`);
@@ -74,6 +73,7 @@ bot.onText(/\/createposition (.+)/, async (msg, match) => {
   }
 });
 
+// Handle /addliquidity (mocked)
 bot.onText(/\/addliquidity (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} sent /addliquidity`);
@@ -92,6 +92,7 @@ bot.onText(/\/addliquidity (.+)/, async (msg, match) => {
   }
 });
 
+// Handle /removeliquidity (mocked)
 bot.onText(/\/removeliquidity (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} sent /removeliquidity`);
@@ -110,6 +111,7 @@ bot.onText(/\/removeliquidity (.+)/, async (msg, match) => {
   }
 });
 
+// Handle /monitor
 bot.onText(/\/monitor (.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} sent /monitor`);
