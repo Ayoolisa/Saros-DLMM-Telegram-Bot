@@ -1,11 +1,19 @@
 // index.js: Telegram bot for Saros DLMM liquidity pool management (webhook mode with Express)
+
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import TelegramBot from 'node-telegram-bot-api';
 import { PublicKey } from '@solana/web3.js';
 import { connection, userWallets, getUserWallet } from './utils.js';
 
 // Your Telegram bot token
-const token = '8489885216:AAHKortMPZFzWM1tIECjFW41YSXVORpl9dA';
+const token = process.env.TELEGRAM_BOT_TOKEN;
+if (!token) {
+  console.error('TELEGRAM_BOT_TOKEN not found in .env');
+  process.exit(1);
+}
 
 // Initialize Express app for webhook endpoint
 const app = express();
@@ -15,7 +23,6 @@ app.use(express.json()); // Parse JSON bodies from Telegram
 app.get('/', (req, res) => {
   res.send('Saros DLMM Telegram Bot is running! Webhook endpoint at /bot.');
 });
-
 // Create bot with webhook mode (no polling to avoid 409 conflicts)
 const bot = new TelegramBot(token, { webHook: true });
 
