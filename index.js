@@ -11,6 +11,11 @@ const token = '8489885216:AAHKortMPZFzWM1tIECjFW41YSXVORpl9dA';
 const app = express();
 app.use(express.json()); // Parse JSON bodies from Telegram
 
+// Add a root route for status check (optional, to avoid 404)
+app.get('/', (req, res) => {
+  res.send('Saros DLMM Telegram Bot is running! Webhook endpoint at /bot.');
+});
+
 // Create bot with webhook mode (no polling to avoid 409 conflicts)
 const bot = new TelegramBot(token, { webHook: true });
 
