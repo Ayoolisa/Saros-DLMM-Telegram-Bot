@@ -7,11 +7,11 @@ import { connection, userWallets, getUserWallet } from './utils.js';
 // Your Telegram bot token
 const token = '8489885216:AAHKortMPZFzWM1tIECjFW41YSXVORpl9dA';
 
-// Initialize Express app
+// Initialize Express app for webhook endpoint
 const app = express();
-app.use(express.json());
+app.use(express.json()); // Parse JSON bodies from Telegram
 
-// Create bot with webhook mode (no polling)
+// Create bot with webhook mode (no polling to avoid 409 conflicts)
 const bot = new TelegramBot(token, { webHook: true });
 
 // Error handling to keep the process alive
@@ -23,24 +23,24 @@ process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error.message);
 });
 
-// Webhook endpoint to receive Telegram updates
+// Webhook endpoint to receive Telegram updates (POST /bot)
 app.post('/bot', (req, res) => {
   bot.processUpdate(req.body);
-  res.sendStatus(200); // Acknowledge receipt
+  res.sendStatus(200); // Acknowledge receipt (important for Telegram)
 });
 
-// Start server on the port Render provides (or 3000 locally)
+// Start server on Render's port (or 3000 locally)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Bot server running on port ${PORT}`);
 });
 
-// Set webhook URL (run this once, or handle dynamically)
-bot.setWebHook(`https://your-app.onrender.com/bot`) // Replace with your Render URL
+// Set webhook URL (replace with your Render URL, e.g., https://saros-bot.onrender.com/bot)
+bot.setWebHook('https://your-app.onrender.com/bot')
   .then(() => console.log('Webhook set successfully'))
   .catch((error) => console.error('Webhook setup error:', error.message));
 
-// Log incoming messages
+// Log incoming messages for debugging
 bot.on('message', (msg) => {
   console.log(`Received message from chat ${msg.chat.id}: ${msg.text}`);
 });
