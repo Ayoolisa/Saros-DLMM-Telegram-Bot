@@ -48,7 +48,7 @@ app.listen(PORT, () => {
 });
 
 // Set webhook URL (replace with your Render URL, e.g., https://saros-bot.onrender.com/bot)
-bot.setWebHook('https://your-app.onrender.com/bot')
+bot.setWebHook('https://saros-bot.onrender.com/bot') // Update this!
   .then(() => console.log('Webhook set successfully'))
   .catch((error) => console.error('Webhook setup error:', error.message));
 
