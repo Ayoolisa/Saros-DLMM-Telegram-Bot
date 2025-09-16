@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
         <title>Saros DLMM Bot</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,400;500&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
 
           :root {
             --bg-color: #f5f5f5;
@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
             --button-bg: #0d6efd;
           }
           body {
-            font-family: 'Bricolage+Grotesque', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            font-family: 'Bricolage+Grotesque', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
