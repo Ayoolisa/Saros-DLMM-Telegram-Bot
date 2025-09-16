@@ -27,7 +27,7 @@ app.use(limiter);
 app.use(express.json()); // Parse JSON bodies from Telegram
 
 // Landing page for testing URL
-app.get("/", (req, res) => {
+app.get('/', (req, res) => {
   res.send(`
     <html>
       <head>
@@ -35,6 +35,7 @@ app.get("/", (req, res) => {
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+
           :root {
             --bg-color: #f5f5f5;
             --card-color: #ffffff;
@@ -80,7 +81,7 @@ app.get("/", (req, res) => {
           }
           .toggle {
             background: var(--button-bg);
-            color: white;
+            color: var(--card-color); /* Match card color for contrast */
             border: none;
             border-radius: 20px;
             padding: 6px 12px;
@@ -102,11 +103,12 @@ app.get("/", (req, res) => {
           }
           .card {
             background-color: var(--card-color);
+            color: var(--text-color); /* Dynamic text color */
             padding: 20px;
             border-radius: 15px;
             box-shadow: var(--shadow);
             margin: 20px 0;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
           }
           h1 {
             font-size: 2em;
@@ -115,13 +117,12 @@ app.get("/", (req, res) => {
           }
           h2 {
             font-size: 1.6em;
-            color: var(--text-color);
             margin-top: 30px;
             font-weight: 400;
           }
           p {
             font-size: 1.1em;
-            color: var(--text-secondary);
+            color: var(--text-secondary); /* Dynamic secondary text */
             line-height: 1.6;
             margin: 15px 0;
           }
@@ -171,6 +172,28 @@ app.get("/", (req, res) => {
             background: var(--card-color);
             border-radius: 10px;
             padding: 20px;
+            width: 100% !important; /* Ensure full width */
+            height: auto; /* Responsive height */
+          }
+          .demo-container {
+            margin: 30px 0;
+            max-width: 800px;
+          }
+          .demo-video {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+          }
+          .demo-video iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
           }
           footer {
             flex-shrink: 0;
@@ -192,7 +215,6 @@ app.get("/", (req, res) => {
             text-decoration: underline;
           }
 
-          /* Responsive Design */
           @media (max-width: 600px) {
             .container {
               padding: 10px;
@@ -217,7 +239,7 @@ app.get("/", (req, res) => {
             .features {
               grid-template-columns: 1fr;
             }
-            .chart-container {
+            .chart-container, .demo-container {
               max-width: 100%;
             }
             #liquidityChart {
@@ -264,6 +286,19 @@ app.get("/", (req, res) => {
             <p><strong>Ready for Testnet</strong>: Mock features now; full Mainnet after validation.</p>
           </div>
 
+          <div class="demo-container">
+            <h2>Watch the Demo</h2>
+            <div class="demo-video">
+              <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Saros DLMM Bot Demo" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <p>Explore how to use the bot with this quick video guide.</p>
+          </div>
+
+          <div class="chart-container">
+            <h2>Realistic Liquidity Chart</h2>
+            <canvas id="liquidityChart" width="600" height="300"></canvas>
+          </div>
+
           <div class="card">
             <h2>How to Use</h2>
             <ol style="text-align: left; max-width: 500px; margin: 0 auto;">
@@ -273,11 +308,6 @@ app.get("/", (req, res) => {
               <li>Use /pools for mock pools, /createposition for positions, etc.</li>
               <li>Monitor with /monitor <pool_address>.</li>
             </ol>
-          </div>
-
-          <div class="chart-container">
-            <h2 style="color: var(--text-color);">Mock Liquidity Chart</h2>
-            <canvas id="liquidityChart" width="400" height="200"></canvas>
           </div>
         </div>
         <footer>
@@ -301,21 +331,33 @@ app.get("/", (req, res) => {
           const chart = new Chart(ctx, {
             type: 'line',
             data: {
-              labels: ['Pool 1', 'Pool 2', 'Pool 3'],
+              labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
               datasets: [{
-                label: 'Liquidity TVL',
-                data: [50000, 75000, 120000],
+                label: 'Liquidity TVL (USD)',
+                data: [45000, 62000, 78000, 95000, 112000], // Realistic fluctuations
                 borderColor: '#007aff',
-                backgroundColor: 'rgba(0, 122, 255, 0.1)',
-                tension: 0.4,
-                fill: true
+                backgroundColor: 'rgba(0, 122, 255, 0.2)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 7
               }]
             },
             options: {
               responsive: true,
-              scales: { y: { beginAtZero: true } },
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { callback: value => `$${value.toLocaleString()}` }
+                }
+              },
               animation: { duration: 2000, easing: 'easeInOutQuart' },
-              plugins: { legend: { display: false } }
+              plugins: {
+                legend: { display: false },
+                tooltip: { mode: 'index', intersect: false }
+              }
             }
           });
 
