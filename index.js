@@ -26,6 +26,21 @@ const limiter = rateLimit({
 app.use(limiter);
 app.use(express.json()); // Parse JSON bodies from Telegram
 
+// Landing page for testing URL
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <head><title>Saros DLMM Bot</title></head>
+      <body>
+        <h1>Saros DLMM Telegram Bot</h1>
+        <p>Click below to test the bot in Telegram:</p>
+        <a href="https://t.me/saros-lp-bot" target="_blank"><button style="padding:10px 20px; font-size:16px; background:#0088cc; color:white; border:none; cursor:pointer;">Test the Bot</button></a>
+        <p>Commands: /start, /pools, /createposition, etc.</p>
+      </body>
+    </html>
+  `);
+});
+
 // Add a root route for status check (optional, to avoid 404)
 app.get("/", (req, res) => {
   res.send("Saros DLMM Telegram Bot is running! Webhook endpoint at /bot.");
