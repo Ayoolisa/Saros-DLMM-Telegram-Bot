@@ -30,11 +30,53 @@ app.use(express.json()); // Parse JSON bodies from Telegram
 app.get('/', (req, res) => {
   res.send(`
     <html>
-      <head><title>Saros DLMM Bot</title></head>
+      <head>
+        <title>Saros DLMM Bot</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+          }
+          h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+          }
+          p {
+            font-size: 1.2em;
+            margin: 10px 0;
+          }
+          a {
+            text-decoration: none;
+          }
+          button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: linear-gradient(90deg, #00c4cc, #0088cc);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+          }
+          button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.5);
+          }
+        </style>
+      </head>
       <body>
         <h1>Saros DLMM Telegram Bot</h1>
         <p>Click below to test the bot in Telegram:</p>
-        <a href="https://t.me/saroslp_bot" target="_blank"><button style="padding:10px 20px; font-size:16px; background:#0088cc; color:white; border:none; cursor:pointer;">Test the Bot</button></a>
+        <a href="https://t.me/SarosDLMMBot" target="_blank"><button>Test the Bot</button></a>
         <p>Commands: /start, /pools, /createposition, etc.</p>
       </body>
     </html>
