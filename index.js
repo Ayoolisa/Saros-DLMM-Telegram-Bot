@@ -350,7 +350,7 @@ app.get('/', (req, res) => {
               scales: {
                 y: {
                   beginAtZero: true,
-                  ticks: { callback: value => `$${value.toLocaleString()}` }
+                  ticks: { callback: value => \`\\$${value.toLocaleString()}\` }
                 }
               },
               animation: { duration: 2000, easing: 'easeInOutQuart' },
