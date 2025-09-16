@@ -20,6 +20,7 @@ app.post('/bot', (req, res) => {
 });
 
 // Landing page
+// Landing page
 app.get('/', (req, res) => {
   const isDlmmActive = dlmm !== null && dlmm !== undefined; // Check dlmm status
   res.send(`
@@ -29,7 +30,6 @@ app.get('/', (req, res) => {
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
-          :root {
             --bg-color: #f5f5f5;
             --card-color: #ffffff;
             --text-color: #1c2526;
@@ -159,14 +159,18 @@ app.get('/', (req, res) => {
           }
           .chart-container {
             margin: 30px 0;
-            max-width: 600px;
+            max-width: 600px; /* Limit chart width */
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
           }
           #liquidityChart {
             background: var(--card-color);
             border-radius: 10px;
             padding: 20px;
-            width: 100% !important;
-            height: auto;
+            width: 100%; /* Relative to container */
+            max-height: 300px; /* Cap height */
+            height: auto; /* Maintain aspect ratio */
           }
           .demo-container {
             margin: 30px 0;
@@ -232,12 +236,14 @@ app.get('/', (req, res) => {
             .features {
               grid-template-columns: 1fr;
             }
-            .chart-container, .demo-container {
-              max-width: 100%;
+            .chart-container {
+              max-width: 100%; /* Full width on small screens */
             }
             #liquidityChart {
-              width: 100% !important;
-              height: auto;
+              max-height: 250px; /* Reduced height for mobile */
+            }
+            .demo-container {
+              max-width: 100%;
             }
           }
         </style>
@@ -339,7 +345,10 @@ app.get('/', (req, res) => {
             },
             options: {
               responsive: true,
-              maintainAspectRatio: false,
+              maintainAspectRatio: true, // Ensure aspect ratio is maintained
+              aspectRatio: 2, // Wider chart (e.g., 2:1 ratio)
+              maxWidth: 600, // Limit max width
+              maxHeight: 300, // Limit max height
               scales: {
                 y: {
                   beginAtZero: true,
