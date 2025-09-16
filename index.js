@@ -42,6 +42,15 @@ process.on("uncaughtException", (error) => {
   console.error("Uncaught Exception:", error.message);
 });
 
+// Helper to create inline keyboard
+function createInlineKeyboard(buttons) {
+  return {
+    reply_markup: {
+      inline_keyboard: buttons
+    }
+  };
+}
+
 // Webhook endpoint to receive Telegram updates (POST /bot)
 app.post("/bot", (req, res) => {
   bot.processUpdate(req.body);
@@ -96,14 +105,49 @@ bot.on("message", (msg) => {
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   console.log(`User ${chatId} sent /start`);
-  bot
-    .sendMessage(
-      chatId,
-      "Welcome to Saros LP Bot! Commands:\n/connectwallet <your_solana_pubkey>\n/pools\n/createposition <pool_address> <lower_price> <upper_price> <liquidity_amount>\n/addliquidity <pool_address> <amount_x> <amount_y>\n/removeliquidity <pool_address> <position_id> <remove_percentage>\n/monitor <pool_address>\n/help"
-    )
-    .catch((error) =>
-      console.log(`SendMessage error for ${chatId}: ${error.message}`)
-    );
+  const keyboard = [
+    [{ text: 'Connect Wallet', callback_data: 'connect_wallet' }],
+    [{ text: 'View Pools', callback_data: 'pools' }],
+    [{ text: 'Create Position', callback_data: 'create_position' }],
+    [{ text: 'Add Liquidity', callback_data: 'add_liquidity' }],
+    [{ text: 'Remove Liquidity', callback_data: 'remove_liquidity' }],
+    [{ text: 'Monitor Pool', callback_data: 'monitor' }],
+    [{ text: 'Help', callback_data: 'help' }]
+  ];
+  bot.sendMessage(chatId, 'Welcome to Saros LP Bot! Choose a command:', createInlineKeyboard(keyboard))
+    .catch((error) => console.log(`SendMessage error for ${chatId}: ${error.message}`));
+});
+
+// Handle button clicks
+bot.on('callback_query', (callbackQuery) => {
+  const chatId = callbackQuery.message.chat.id;
+  const data = callbackQuery.data;
+  console.log(`User ${chatId} clicked button: ${data}`);
+
+  switch (data) {
+    case 'connect_wallet':
+      bot.sendMessage(chatId, 'Send /connectwallet <your_solana_pubkey>');
+      break;
+    case 'pools':
+      bot.sendMessage(chatId, 'Mock DLMM Pools:\n1. Address: 9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin (SOL/USDC example)\n2. Address: 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU (Mock pool for testing)');
+      break;
+    case 'create_position':
+      bot.sendMessage(chatId, 'Send /createposition <pool_address> <lower_price> <upper_price> <liquidity_amount>');
+      break;
+    case 'add_liquidity':
+      bot.sendMessage(chatId, 'Send /addliquidity <pool_address> <amount_x> <amount_y>');
+      break;
+    case 'remove_liquidity':
+      bot.sendMessage(chatId, 'Send /removeliquidity <pool_address> <position_id> <remove_percentage> (0-100)');
+      break;
+    case 'monitor':
+      bot.sendMessage(chatId, 'Send /monitor <pool_address>');
+      break;
+    case 'help':
+      bot.sendMessage(chatId, 'Saros LP Bot manages DLMM positions.\n1. Connect: /connectwallet <pubkey>\n2. List pools: /pools\n3. Create: /createposition <pool> <lower> <upper> <liquidity>\n4. Manage: /addliquidity, /removeliquidity\n5. Monitor: /monitor <pool>');
+      break;
+  }
+  bot.answerCallbackQuery(callbackQuery.id); // Acknowledge button press
 });
 
 // Handle /help
