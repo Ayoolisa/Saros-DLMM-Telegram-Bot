@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
             --button-bg: #0d6efd;
           }
           body {
-            font-family: 'Bricolage+Grotesque', sans-serif;
+            font-family: "Bricolage Grotesque", sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
