@@ -26,7 +26,6 @@ app.get('/', (req, res) => {
     <html>
       <head>
         <title>Saros DLMM Bot</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
 
@@ -46,7 +45,7 @@ app.get('/', (req, res) => {
             --button-bg: #0d6efd;
           }
           body {
-            font-family: "Bricolage Grotesque", sans-serif;
+            font-family: 'Bricolage Grotesque', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -54,7 +53,7 @@ app.get('/', (req, res) => {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
           }
           header {
             background: var(--card-color);
@@ -72,6 +71,7 @@ app.get('/', (req, res) => {
             font-size: 1.5em;
             margin: 0;
             font-weight: 400;
+            color: var(--text-color);
           }
           .toggle {
             background: var(--button-bg);
@@ -88,8 +88,8 @@ app.get('/', (req, res) => {
           }
           .container {
             flex: 1 0 auto;
-            max-width: 800px;
-            width: 100%;
+            max-width: 1200px; /* Increased from 800px for wider vibe */
+            width: 90%; /* Responsive width */
             margin: 0 auto;
             padding: 20px;
             text-align: center;
@@ -108,11 +108,13 @@ app.get('/', (req, res) => {
             font-size: 2em;
             margin-bottom: 10px;
             font-weight: 400;
+            color: var(--text-color);
           }
           h2 {
             font-size: 1.6em;
             margin-top: 30px;
             font-weight: 400;
+            color: var(--text-color);
           }
           p {
             font-size: 1.1em;
@@ -131,6 +133,7 @@ app.get('/', (req, res) => {
             padding: 20px;
             border-radius: 10px;
             transition: transform 0.2s;
+            color: var(--text-color);
           }
           .feature-card:hover {
             transform: translateY(-5px);
@@ -158,24 +161,9 @@ app.get('/', (req, res) => {
             70% { box-shadow: 0 0 0 10px rgba(0, 122, 255, 0); }
             100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
           }
-          .chart-container {
-            margin: 30px 0;
-            max-width: 600px;
-            width: 100%;
-            margin-left: auto;
-            margin-right: auto;
-          }
-          #liquidityChart {
-            background: var(--card-color);
-            border-radius: 10px;
-            padding: 20px;
-            width: 100%;
-            max-height: 300px;
-            height: auto;
-          }
           .demo-container {
             margin: 30px 0;
-            max-width: 800px;
+            max-width: 100%; /* Wider demo container */
           }
           .demo-video {
             position: relative;
@@ -204,6 +192,7 @@ app.get('/', (req, res) => {
           footer p {
             font-size: 0.9em;
             margin: 0;
+            color: var(--text-secondary);
           }
           footer a {
             color: var(--button-bg);
@@ -216,6 +205,7 @@ app.get('/', (req, res) => {
           @media (max-width: 600px) {
             .container {
               padding: 10px;
+              width: 95%; /* Slightly wider on mobile */
             }
             .card {
               padding: 15px;
@@ -236,12 +226,6 @@ app.get('/', (req, res) => {
             }
             .features {
               grid-template-columns: 1fr;
-            }
-            .chart-container {
-              max-width: 100%;
-            }
-            #liquidityChart {
-              max-height: 250px;
             }
             .demo-container {
               max-width: 100%;
@@ -294,11 +278,6 @@ app.get('/', (req, res) => {
             <p>Explore how to use the bot with this quick video guide.</p>
           </div>
 
-          <div class="chart-container">
-            <h2>Realistic Liquidity Chart</h2>
-            <canvas id="liquidityChart" width="600" height="300"></canvas>
-          </div>
-
           <div class="card">
             <h2>How to Use</h2>
             <ol style="text-align: left; max-width: 500px; margin: 0 auto;">
@@ -335,53 +314,6 @@ app.get('/', (req, res) => {
             document.body.dataset.theme = savedTheme;
             if (toggle) toggle.textContent = savedTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
           }
-
-          const ctx = document.getElementById('liquidityChart').getContext('2d');
-          const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
-              datasets: [{
-                label: 'Liquidity TVL (USD)',
-                data: [45000, 62000, 78000, 95000, 112000],
-                borderColor: '#007aff',
-                backgroundColor: 'rgba(0, 122, 255, 0.2)',
-                borderWidth: 2,
-                tension: 0.3,
-                fill: true,
-                pointRadius: 5,
-                pointHoverRadius: 7
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: true,
-              aspectRatio: 2,
-              maxWidth: 600,
-              maxHeight: 300,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: { callback: function(value) { return '$' + value.toLocaleString(); } }
-                }
-              },
-              animation: { duration: 2000, easing: 'easeInOutQuart' },
-              plugins: {
-                legend: { display: false },
-                tooltip: { mode: 'index', intersect: false }
-              }
-            }
-          });
-
-          document.querySelectorAll('.card').forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            setTimeout(() => {
-              card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-              card.style.opacity = '1';
-              card.style.transform = 'translateY(0)';
-            }, index * 200);
-          });
         </script>
       </body>
     </html>
