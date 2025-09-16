@@ -34,6 +34,8 @@ app.get('/', (req, res) => {
         <title>Saros DLMM Bot</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
+          @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,400;500&display=swap');
+
           :root {
             --bg-color: #f5f5f5;
             --card-color: #ffffff;
@@ -50,7 +52,7 @@ app.get('/', (req, res) => {
             --button-bg: #0d6efd;
           }
           body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Helvetica Neue', sans-serif;
+            font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -68,11 +70,27 @@ app.get('/', (req, res) => {
             position: sticky;
             top: 0;
             z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
           }
           header h1 {
             font-size: 1.5em;
             margin: 0;
             font-weight: 400;
+          }
+          .toggle {
+            background: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: opacity 0.2s;
+          }
+          .toggle:hover {
+            opacity: 0.8;
           }
           .container {
             flex: 1 0 auto;
@@ -94,13 +112,13 @@ app.get('/', (req, res) => {
           h1 {
             font-size: 2em;
             margin-bottom: 10px;
-            font-weight: 400; /* Lighter heading */
+            font-weight: 400;
           }
           h2 {
             font-size: 1.6em;
             color: var(--text-color);
             margin-top: 30px;
-            font-weight: 400; /* Lighter heading */
+            font-weight: 400;
           }
           p {
             font-size: 1.1em;
@@ -155,20 +173,6 @@ app.get('/', (req, res) => {
             border-radius: 10px;
             padding: 20px;
           }
-          .toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--button-bg);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 8px 12px;
-            cursor: pointer;
-          }
-          .toggle:hover {
-            opacity: 0.8;
-          }
           footer {
             flex-shrink: 0;
             background: var(--card-color);
@@ -188,12 +192,46 @@ app.get('/', (req, res) => {
           footer a:hover {
             text-decoration: underline;
           }
+
+          /* Responsive Design */
+          @media (max-width: 600px) {
+            .container {
+              padding: 10px;
+            }
+            .card {
+              padding: 15px;
+              margin: 10px 0;
+            }
+            h1 {
+              font-size: 1.8em;
+            }
+            h2 {
+              font-size: 1.4em;
+            }
+            p {
+              font-size: 1em;
+            }
+            button {
+              padding: 10px 20px;
+              font-size: 14px;
+            }
+            .features {
+              grid-template-columns: 1fr;
+            }
+            .chart-container {
+              max-width: 100%;
+            }
+            #liquidityChart {
+              width: 100% !important;
+              height: auto;
+            }
+          }
         </style>
       </head>
       <body>
-        <button class="toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
         <header>
           <h1>Saros DLMM Bot</h1>
+          <button class="toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
         </header>
         <div class="container">
           <div class="card">
