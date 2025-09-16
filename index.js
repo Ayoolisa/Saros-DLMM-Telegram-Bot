@@ -76,7 +76,7 @@ app.get('/', (req, res) => {
       <body>
         <h1>Saros DLMM Telegram Bot</h1>
         <p>Click below to test the bot in Telegram:</p>
-        <a href="https://t.me/SarosDLMMBot" target="_blank"><button>Test the Bot</button></a>
+        <a href="https://t.me/saroslp_bot" target="_blank"><button>Test the Bot</button></a>
         <p>Commands: /start, /pools, /createposition, etc.</p>
       </body>
     </html>
