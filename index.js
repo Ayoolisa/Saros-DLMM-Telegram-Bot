@@ -54,32 +54,53 @@ app.get('/', (req, res) => {
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 0;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             transition: background-color 0.3s ease;
           }
-          .container {
-            max-width: 800px;
-            margin: 0 auto;
+          header {
+            background: var(--card-color);
+            padding: 10px 20px;
+            box-shadow: var(--shadow);
             text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+          }
+          header h1 {
+            font-size: 1.5em;
+            margin: 0;
+            font-weight: 400;
+          }
+          .container {
+            flex: 1 0 auto;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            box-sizing: border-box;
           }
           .card {
             background-color: var(--card-color);
-            padding: 30px;
+            padding: 20px;
             border-radius: 15px;
             box-shadow: var(--shadow);
             margin: 20px 0;
             transition: background-color 0.3s ease;
           }
           h1 {
-            font-size: 2.5em;
+            font-size: 2em;
             margin-bottom: 10px;
-            font-weight: 600;
+            font-weight: 400; /* Lighter heading */
           }
           h2 {
-            font-size: 1.8em;
+            font-size: 1.6em;
             color: var(--text-color);
             margin-top: 30px;
+            font-weight: 400; /* Lighter heading */
           }
           p {
             font-size: 1.1em;
@@ -148,10 +169,32 @@ app.get('/', (req, res) => {
           .toggle:hover {
             opacity: 0.8;
           }
+          footer {
+            flex-shrink: 0;
+            background: var(--card-color);
+            padding: 10px 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            margin-top: auto;
+          }
+          footer p {
+            font-size: 0.9em;
+            margin: 0;
+          }
+          footer a {
+            color: var(--button-bg);
+            text-decoration: none;
+          }
+          footer a:hover {
+            text-decoration: underline;
+          }
         </style>
       </head>
       <body>
         <button class="toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+        <header>
+          <h1>Saros DLMM Bot</h1>
+        </header>
         <div class="container">
           <div class="card">
             <h1>Saros DLMM Telegram Bot</h1>
@@ -161,7 +204,7 @@ app.get('/', (req, res) => {
 
           <div class="card">
             <h2>What Can It Do?</h2>
-            <p>Designed for ease and security, the bot handles complex DLMM tasks with simple commands. No apps, no wallets— just chat and trade.</p>
+            <p>Designed for ease and security, the bot handles complex DLMM tasks with simple commands. No apps, no wallets—just chat and trade.</p>
             <div class="features">
               <div class="feature-card">
                 <h3>Connect Wallet</h3>
@@ -200,9 +243,11 @@ app.get('/', (req, res) => {
             <canvas id="liquidityChart" width="400" height="200"></canvas>
           </div>
         </div>
+        <footer>
+          <p>&copy; 2025 Saros DLMM Bot | <a href="https://github.com/Ayoolisa/Saros-DLMM-Telegram-Bot" target="_blank">GitHub</a> | Built with ❤️ by Ayoolisa</p>
+        </footer>
 
         <script>
-          // Dark mode toggle
           const toggle = document.querySelector('.toggle');
           toggle.addEventListener('click', () => {
             document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
@@ -210,13 +255,11 @@ app.get('/', (req, res) => {
             localStorage.setItem('theme', document.body.dataset.theme);
           });
 
-          // Load saved theme
           if (localStorage.getItem('theme') === 'dark') {
             document.body.dataset.theme = 'dark';
             toggle.textContent = '☀️ Light Mode';
           }
 
-          // Mock liquidity chart with Chart.js
           const ctx = document.getElementById('liquidityChart').getContext('2d');
           const chart = new Chart(ctx, {
             type: 'line',
@@ -233,20 +276,12 @@ app.get('/', (req, res) => {
             },
             options: {
               responsive: true,
-              scales: {
-                y: { beginAtZero: true }
-              },
-              animation: {
-                duration: 2000,
-                easing: 'easeInOutQuart'
-              },
-              plugins: {
-                legend: { display: false }
-              }
+              scales: { y: { beginAtZero: true } },
+              animation: { duration: 2000, easing: 'easeInOutQuart' },
+              plugins: { legend: { display: false } }
             }
           });
 
-          // Fade-in animation for cards
           document.querySelectorAll('.card').forEach((card, index) => {
             card.style.opacity = '0';
             card.style.transform = 'translateY(20px)';
