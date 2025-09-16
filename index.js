@@ -34,7 +34,7 @@ app.get('/', (req, res) => {
         <title>Saros DLMM Bot</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,400;500&display=swap');
 
           :root {
             --bg-color: #f5f5f5;
@@ -52,7 +52,7 @@ app.get('/', (req, res) => {
             --button-bg: #0d6efd;
           }
           body {
-            font-family: 'Bricolage Grotesque', sans-serif;
+            font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -81,7 +81,7 @@ app.get('/', (req, res) => {
           }
           .toggle {
             background: var(--button-bg);
-            color: var(--card-color); /* Match card color for contrast */
+            color: var(--card-color);
             border: none;
             border-radius: 20px;
             padding: 6px 12px;
@@ -103,7 +103,7 @@ app.get('/', (req, res) => {
           }
           .card {
             background-color: var(--card-color);
-            color: var(--text-color); /* Dynamic text color */
+            color: var(--text-color);
             padding: 20px;
             border-radius: 15px;
             box-shadow: var(--shadow);
@@ -122,7 +122,7 @@ app.get('/', (req, res) => {
           }
           p {
             font-size: 1.1em;
-            color: var(--text-secondary); /* Dynamic secondary text */
+            color: var(--text-secondary);
             line-height: 1.6;
             margin: 15px 0;
           }
@@ -172,8 +172,8 @@ app.get('/', (req, res) => {
             background: var(--card-color);
             border-radius: 10px;
             padding: 20px;
-            width: 100% !important; /* Ensure full width */
-            height: auto; /* Responsive height */
+            width: 100% !important;
+            height: auto;
           }
           .demo-container {
             margin: 30px 0;
@@ -181,7 +181,7 @@ app.get('/', (req, res) => {
           }
           .demo-video {
             position: relative;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            padding-bottom: 56.25%;
             height: 0;
             overflow: hidden;
             border-radius: 15px;
@@ -334,7 +334,7 @@ app.get('/', (req, res) => {
               labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
               datasets: [{
                 label: 'Liquidity TVL (USD)',
-                data: [45000, 62000, 78000, 95000, 112000], // Realistic fluctuations
+                data: [45000, 62000, 78000, 95000, 112000],
                 borderColor: '#007aff',
                 backgroundColor: 'rgba(0, 122, 255, 0.2)',
                 borderWidth: 2,
