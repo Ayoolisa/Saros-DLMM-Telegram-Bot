@@ -32,37 +32,75 @@ app.get('/', (req, res) => {
     <html>
       <head>
         <title>Saros DLMM Bot</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
+          :root {
+            --bg-color: #f5f5f5;
+            --card-color: #ffffff;
+            --text-color: #1c2526;
+            --text-secondary: #4a4a4a;
+            --button-bg: #007aff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --card-color: #2a2a2a;
+            --text-color: #ffffff;
+            --text-secondary: #b0b0b0;
+            --button-bg: #0d6efd;
+          }
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Helvetica Neue', sans-serif;
-            background-color: #f5f5f5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            transition: background-color 0.3s ease;
+          }
+          .container {
+            max-width: 800px;
+            margin: 0 auto;
             text-align: center;
           }
           .card {
-            background-color: #ffffff;
+            background-color: var(--card-color);
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 400px;
+            box-shadow: var(--shadow);
+            margin: 20px 0;
+            transition: background-color 0.3s ease;
           }
           h1 {
-            font-size: 2em;
-            color: #1c2526;
-            margin-bottom: 20px;
+            font-size: 2.5em;
+            margin-bottom: 10px;
             font-weight: 600;
+          }
+          h2 {
+            font-size: 1.8em;
+            color: var(--text-color);
+            margin-top: 30px;
           }
           p {
             font-size: 1.1em;
-            color: #4a4a4a;
-            margin: 10px 0;
-            line-height: 1.5;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: 15px 0;
+          }
+          .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+          }
+          .feature-card {
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(0, 122, 255, 0.05));
+            padding: 20px;
+            border-radius: 10px;
+            transition: transform 0.2s;
+          }
+          .feature-card:hover {
+            transform: translateY(-5px);
           }
           a {
             text-decoration: none;
@@ -70,25 +108,155 @@ app.get('/', (req, res) => {
           button {
             padding: 12px 25px;
             font-size: 16px;
-            background-color: #007aff;
+            background-color: var(--button-bg);
             color: white;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, transform 0.2s;
+            animation: pulse 2s infinite;
           }
           button:hover {
             opacity: 0.9;
+            transform: scale(1.05);
+          }
+          @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 122, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
+          }
+          .chart-container {
+            margin: 30px 0;
+            max-width: 600px;
+          }
+          #liquidityChart {
+            background: var(--card-color);
+            border-radius: 10px;
+            padding: 20px;
+          }
+          .toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 12px;
+            cursor: pointer;
+          }
+          .toggle:hover {
+            opacity: 0.8;
           }
         </style>
       </head>
       <body>
-        <div class="card">
-          <h1>Saros DLMM Telegram Bot</h1>
-          <p>Click below to test the bot in Telegram:</p>
-          <a href="https://t.me/saroslp_bot" target="_blank"><button>Test the Bot</button></a>
-          <p>Commands: /start, /pools, /createposition, etc.</p>
+        <button class="toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+        <div class="container">
+          <div class="card">
+            <h1>Saros DLMM Telegram Bot</h1>
+            <p>Empower your DeFi journey with seamless liquidity management on Solana's Saros DLMM. Built for retail LPs, this bot offers mobile-first tools to create positions, add/remove liquidity, and monitor pools in real-time—all from Telegram.</p>
+            <a href="https://t.me/saroslp_bot" target="_blank"><button>Test the Bot</button></a>
+          </div>
+
+          <div class="card">
+            <h2>What Can It Do?</h2>
+            <p>Designed for ease and security, the bot handles complex DLMM tasks with simple commands. No apps, no wallets— just chat and trade.</p>
+            <div class="features">
+              <div class="feature-card">
+                <h3>Connect Wallet</h3>
+                <p>Securely link your Solana wallet in seconds. No private keys shared.</p>
+              </div>
+              <div class="feature-card">
+                <h3>Manage Positions</h3>
+                <p>Create, add, or remove liquidity with one command. Mock TXs for demo; real integration coming.</p>
+              </div>
+              <div class="feature-card">
+                <h3>Real-Time Monitoring</h3>
+                <p>Get alerts on pool changes and fees. Stay ahead of impermanent loss.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Security & Trust</h2>
+            <p>Your funds are safe—bot uses unsigned TXs for wallet signing. Rate-limited to prevent spam, and deployed on Render for 24/7 uptime. Built with Node.js, Express, and Solana Web3.js for reliability.</p>
+            <p><strong>Ready for Testnet</strong>: Mock features now; full Mainnet after validation.</p>
+          </div>
+
+          <div class="card">
+            <h2>How to Use</h2>
+            <ol style="text-align: left; max-width: 500px; margin: 0 auto;">
+              <li>Click "Test the Bot" to start in Telegram.</li>
+              <li>Send /start to see the menu.</li>
+              <li>Connect your wallet with /connectwallet <pubkey>.</li>
+              <li>Use /pools for mock pools, /createposition for positions, etc.</li>
+              <li>Monitor with /monitor <pool_address>.</li>
+            </ol>
+          </div>
+
+          <div class="chart-container">
+            <h2 style="color: var(--text-color);">Mock Liquidity Chart</h2>
+            <canvas id="liquidityChart" width="400" height="200"></canvas>
+          </div>
         </div>
+
+        <script>
+          // Dark mode toggle
+          const toggle = document.querySelector('.toggle');
+          toggle.addEventListener('click', () => {
+            document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+            toggle.textContent = document.body.dataset.theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+            localStorage.setItem('theme', document.body.dataset.theme);
+          });
+
+          // Load saved theme
+          if (localStorage.getItem('theme') === 'dark') {
+            document.body.dataset.theme = 'dark';
+            toggle.textContent = '☀️ Light Mode';
+          }
+
+          // Mock liquidity chart with Chart.js
+          const ctx = document.getElementById('liquidityChart').getContext('2d');
+          const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: ['Pool 1', 'Pool 2', 'Pool 3'],
+              datasets: [{
+                label: 'Liquidity TVL',
+                data: [50000, 75000, 120000],
+                borderColor: '#007aff',
+                backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+              }]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                y: { beginAtZero: true }
+              },
+              animation: {
+                duration: 2000,
+                easing: 'easeInOutQuart'
+              },
+              plugins: {
+                legend: { display: false }
+              }
+            }
+          });
+
+          // Fade-in animation for cards
+          document.querySelectorAll('.card').forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+              card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }, index * 200);
+          });
+        </script>
       </body>
     </html>
   `);
