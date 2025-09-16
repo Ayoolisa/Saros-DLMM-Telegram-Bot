@@ -34,9 +34,8 @@ app.get('/', (req, res) => {
         <title>Saros DLMM Bot</title>
         <style>
           body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Helvetica Neue', sans-serif;
+            background-color: #f5f5f5;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -45,39 +44,51 @@ app.get('/', (req, res) => {
             margin: 0;
             text-align: center;
           }
+          .card {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+          }
           h1 {
-            font-size: 2.5em;
+            font-size: 2em;
+            color: #1c2526;
             margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
           }
           p {
-            font-size: 1.2em;
+            font-size: 1.1em;
+            color: #4a4a4a;
             margin: 10px 0;
+            line-height: 1.5;
           }
           a {
             text-decoration: none;
           }
           button {
-            padding: 15px 30px;
-            font-size: 18px;
-            background: linear-gradient(90deg, #00c4cc, #0088cc);
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #007aff;
             color: white;
             border: none;
-            border-radius: 25px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: opacity 0.2s;
           }
           button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.5);
+            opacity: 0.9;
           }
         </style>
       </head>
       <body>
-        <h1>Saros DLMM Telegram Bot</h1>
-        <p>Click below to test the bot in Telegram:</p>
-        <a href="https://t.me/saroslp_bot" target="_blank"><button>Test the Bot</button></a>
-        <p>Commands: /start, /pools, /createposition, etc.</p>
+        <div class="card">
+          <h1>Saros DLMM Telegram Bot</h1>
+          <p>Click below to test the bot in Telegram:</p>
+          <a href="https://t.me/saroslp_bot" target="_blank"><button>Test the Bot</button></a>
+          <p>Commands: /start, /pools, /createposition, etc.</p>
+        </div>
       </body>
     </html>
   `);
