@@ -20,7 +20,6 @@ app.post('/bot', (req, res) => {
 });
 
 // Landing page
-// Landing page
 app.get('/', (req, res) => {
   const isDlmmActive = dlmm !== null && dlmm !== undefined; // Check dlmm status
   res.send(`
@@ -29,7 +28,9 @@ app.get('/', (req, res) => {
         <title>Saros DLMM Bot</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,400;500&display=swap');
+
+          :root {
             --bg-color: #f5f5f5;
             --card-color: #ffffff;
             --text-color: #1c2526;
@@ -45,7 +46,7 @@ app.get('/', (req, res) => {
             --button-bg: #0d6efd;
           }
           body {
-            font-family: 'Bricolage+Grotesque', sans-serif;
+            font-family: 'Bricolage+Grotesque', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -159,7 +160,7 @@ app.get('/', (req, res) => {
           }
           .chart-container {
             margin: 30px 0;
-            max-width: 600px; /* Limit chart width */
+            max-width: 600px;
             width: 100%;
             margin-left: auto;
             margin-right: auto;
@@ -168,9 +169,9 @@ app.get('/', (req, res) => {
             background: var(--card-color);
             border-radius: 10px;
             padding: 20px;
-            width: 100%; /* Relative to container */
-            max-height: 300px; /* Cap height */
-            height: auto; /* Maintain aspect ratio */
+            width: 100%;
+            max-height: 300px;
+            height: auto;
           }
           .demo-container {
             margin: 30px 0;
@@ -237,10 +238,10 @@ app.get('/', (req, res) => {
               grid-template-columns: 1fr;
             }
             .chart-container {
-              max-width: 100%; /* Full width on small screens */
+              max-width: 100%;
             }
             #liquidityChart {
-              max-height: 250px; /* Reduced height for mobile */
+              max-height: 250px;
             }
             .demo-container {
               max-width: 100%;
@@ -315,15 +316,24 @@ app.get('/', (req, res) => {
 
         <script>
           const toggle = document.querySelector('.toggle');
-          toggle.addEventListener('click', () => {
-            document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-            toggle.textContent = document.body.dataset.theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
-            localStorage.setItem('theme', document.body.dataset.theme);
-          });
+          if (toggle) {
+            toggle.addEventListener('click', () => {
+              const body = document.body;
+              const currentTheme = body.dataset.theme || 'light';
+              const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+              body.dataset.theme = newTheme;
+              toggle.textContent = newTheme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode';
+              localStorage.setItem('theme', newTheme);
+            });
+          } else {
+            console.error('Toggle button not found');
+          }
 
-          if (localStorage.getItem('theme') === 'dark') {
-            document.body.dataset.theme = 'dark';
-            toggle.textContent = '☀️ Light Mode';
+          // Load saved theme
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme) {
+            document.body.dataset.theme = savedTheme;
+            if (toggle) toggle.textContent = savedTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
           }
 
           const ctx = document.getElementById('liquidityChart').getContext('2d');
@@ -345,10 +355,10 @@ app.get('/', (req, res) => {
             },
             options: {
               responsive: true,
-              maintainAspectRatio: true, // Ensure aspect ratio is maintained
-              aspectRatio: 2, // Wider chart (e.g., 2:1 ratio)
-              maxWidth: 600, // Limit max width
-              maxHeight: 300, // Limit max height
+              maintainAspectRatio: true,
+              aspectRatio: 2,
+              maxWidth: 600,
+              maxHeight: 300,
               scales: {
                 y: {
                   beginAtZero: true,
