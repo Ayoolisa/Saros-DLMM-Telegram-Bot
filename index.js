@@ -2,7 +2,7 @@
 import express from 'express';
 import TelegramBot from 'node-telegram-bot-api';
 import { PublicKey, Connection } from '@solana/web3.js';
-import { connection, userWallets, getUserWallet } from './utils.js';
+import { connection, dlmm, userWallets, getUserWallet } from './utils.js';
 
 // Initialize Express app
 const app = express();
@@ -20,8 +20,8 @@ app.post('/bot', (req, res) => {
 });
 
 // Landing page
-// Landing page
 app.get('/', (req, res) => {
+  const isDlmmActive = dlmm !== null && dlmm !== undefined; // Check dlmm status
   res.send(`
     <html>
       <head>
@@ -29,7 +29,6 @@ app.get('/', (req, res) => {
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
-
           :root {
             --bg-color: #f5f5f5;
             --card-color: #ffffff;
@@ -277,7 +276,7 @@ app.get('/', (req, res) => {
           <div class="card">
             <h2>Security & Trust</h2>
             <p>Your funds are safe—bot uses unsigned TXs for wallet signing. Rate-limited to prevent spam, and deployed on Render for 24/7 uptime. Built with Node.js, Express, and Solana Web3.js for reliability.</p>
-            <p><strong>Ready for Testnet</strong>: Mock features now; full Mainnet after validation. ${dlmm ? 'DLMM SDK active.' : 'DLMM SDK unavailable (demo mode).'}</p>
+            <p><strong>Ready for Testnet</strong>: Mock features now; full Mainnet after validation. ${isDlmmActive ? 'DLMM SDK active.' : 'DLMM SDK unavailable (demo mode).'}</p>
           </div>
 
           <div class="demo-container">

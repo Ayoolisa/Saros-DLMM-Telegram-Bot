@@ -8,7 +8,6 @@ const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
 // Initialize DLMM SDK with error handling and fallback
 let dlmm;
 try {
-  // Check if LiquidityBookServices is available and accepts the connection
   if (typeof pkg.LiquidityBookServices === 'function') {
     dlmm = new pkg.LiquidityBookServices(connection);
     console.log('LiquidityBookServices initialized successfully with connection:', connection.rpcEndpoint);
