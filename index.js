@@ -133,7 +133,7 @@ app.get("/", (req, res) => {
           }
           .container {
             flex: 1 0 auto;
-            max-width: 1200px;
+            max-width: 1600px;
             width: 90%;
             margin: 0 auto;
             padding: 20px;
