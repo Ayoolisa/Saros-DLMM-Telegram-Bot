@@ -12,6 +12,32 @@ app.use(express.json()); // Parse JSON bodies from Telegram
 const token = '8489885216:AAHKortMPZFzWM1tIECjFW41YSXVORpl9dA';
 const bot = new TelegramBot(token, { polling: false }); // Webhook mode, polling disabled
 
+// Basic command handlers
+bot.onText(/\/start/, (msg) => {
+  const chatId = msg.chat.id;
+  console.log(`Start command from ${msg.from.username || msg.from.first_name} (ID: ${chatId})`);
+  bot.sendMessage(chatId, 'Welcome to Saros DLMM Bot! Use /help for commands. Your wallet: Not connected yet.');
+});
+
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+  const helpText = `
+/connectwallet <pubkey> - Link your Solana wallet
+/pools - List available pools
+/createposition <pool> <amount> - Create LP position
+/monitor <pool> - Watch pool for changes
+  `;
+  bot.sendMessage(chatId, helpText);
+});
+
+// Catch-all for unknown messages (optional, for debugging)
+bot.on('message', (msg) => {
+  if (!msg.text || msg.text.startsWith('/')) return; // Ignore non-commands
+  const chatId = msg.chat.id;
+  console.log(`Unhandled message from ${msg.from.username}: ${msg.text}`);
+  bot.sendMessage(chatId, 'Sorry, I didn\'t understand that. Try /help.');
+});
+
 // Webhook endpoint
 app.post('/bot', (req, res) => {
   console.log('Received webhook update:', req.body);
