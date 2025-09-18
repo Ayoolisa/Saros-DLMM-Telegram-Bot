@@ -150,7 +150,7 @@ app.get("/", (req, res) => {
             box-shadow: var(--shadow);
             margin: 20px auto;
             width: 100%;
-            max-width: 800px;
+            max-width: 16000px;
             transition: background-color 0.3s ease, color 0.3s ease;
           }
           h1 {
