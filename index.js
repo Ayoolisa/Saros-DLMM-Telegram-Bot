@@ -19,25 +19,105 @@ app.post('/bot', (req, res) => {
   res.sendStatus(200);
 });
 
-// Handle /start (add logging)
-bot.onText(/\/start/, (msg) => {
+// Handle /help (with validation)
+bot.onText(/\/help/, (msg) => {
   const chatId = msg.chat.id;
-  console.log(`User ${chatId} sent /start - Processing response`);
-  bot.sendMessage(chatId, 'Welcome to Saros LP Bot! Commands:\n/connectwallet <your_solana_pubkey>\n/pools\n/createposition <pool_address> <lower_price> <upper_price> <liquidity_amount>\n/addliquidity <pool_address> <amount_x> <amount_y>\n/removeliquidity <pool_address> <position_id> <remove_percentage>\n/monitor <pool_address>\n/help')
-    .then(() => console.log(`Sent welcome message to ${chatId}`))
+  console.log(`User ${chatId} sent /help`);
+  bot.sendMessage(chatId, 'Saros LP Bot manages DLMM positions.\n1. Connect: /connectwallet <pubkey>\n2. List pools: /pools\n3. Create: /createposition <pool> <lower> <upper> <liquidity>\n4. Manage: /addliquidity, /removeliquidity\n5. Monitor: /monitor <pool>')
+    .then(() => console.log(`Sent help message to ${chatId}`))
     .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
 });
 
-// Do the same for other handlers, e.g., /pools
-bot.onText(/\/pools/, async (msg) => {
+// Handle /connectwallet (with pubkey validation)
+bot.onText(/\/connectwallet (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  console.log(`User ${chatId} sent /pools - Processing response`);
-  bot.sendMessage(chatId, 'Mock DLMM Pools (devnet limited; real pools via Saros explorer):\n1. Address: 9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin (SOL/USDC example)\n2. Address: 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU (Mock pool for testing)')
-    .then(() => console.log(`Sent pools message to ${chatId}`))
-    .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
+  console.log(`User ${chatId} sent /connectwallet`);
+  const pubkeyStr = match[1];
+  if (!pubkeyStr || pubkeyStr.trim() === '') {
+    return bot.sendMessage(chatId, 'Usage: /connectwallet <your_solana_pubkey> (e.g., /connectwallet YourPubKeyHere1234567890)');
+  }
+  try {
+    const pubkey = new PublicKey(pubkeyStr.trim());
+    userWallets.set(chatId, pubkey);
+    bot.sendMessage(chatId, `Wallet connected: ${pubkey.toString()}. Approve txs in your wallet app.`)
+      .then(() => console.log(`Sent connect message to ${chatId}`))
+      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
+  } catch (error) {
+    bot.sendMessage(chatId, `Invalid pubkey: ${error.message}`)
+      .then(() => console.log(`Sent invalid pubkey error to ${chatId}`))
+      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
+  }
 });
 
-// Add .then/.catch to all other bot.sendMessage calls similarly
+// Handle /addliquidity (with wallet check)
+bot.onText(/\/addliquidity (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  console.log(`User ${chatId} sent /addliquidity`);
+  const params = match[1].split(' ');
+  if (params.length < 3) {
+    return bot.sendMessage(chatId, 'Usage: /addliquidity <pool_address> <amount_x> <amount_y>');
+  }
+  try {
+    const walletPubkey = getUserWallet(chatId); // Throws if no wallet
+    console.log(`Adding liquidity for user ${chatId} with wallet ${walletPubkey.toString()}`);
+    const pool = params[0];
+    const amountX = params[1];
+    const amountY = params[2];
+    await sendTransactionLink(chatId, 'addliquidity', pool, { amountX, amountY });
+  } catch (error) {
+    console.log(`Error adding liquidity for user ${chatId}: ${error.message}`);
+    bot.sendMessage(chatId, `Error: ${error.message}. Connect wallet first with /connectwallet <pubkey>.`)
+      .then(() => console.log(`Sent error message to ${chatId}`))
+      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
+  }
+});
+
+// Handle /createposition (with wallet check, similar to /addliquidity)
+bot.onText(/\/createposition (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  console.log(`User ${chatId} sent /createposition`);
+  const params = match[1].split(' ');
+  if (params.length < 4) {
+    return bot.sendMessage(chatId, 'Usage: /createposition <pool_address> <lower_price> <upper_price> <liquidity_amount>');
+  }
+  try {
+    const walletPubkey = getUserWallet(chatId); // Throws if no wallet
+    console.log(`Creating position for user ${chatId} with wallet ${walletPubkey.toString()}`);
+    const pool = params[0];
+    const lowerPrice = params[1];
+    const upperPrice = params[2];
+    const liquidity = params[3];
+    await sendTransactionLink(chatId, 'createposition', pool, { lowerPrice, upperPrice, liquidity });
+  } catch (error) {
+    console.log(`Error creating position for user ${chatId}: ${error.message}`);
+    bot.sendMessage(chatId, `Error: ${error.message}. Connect wallet first with /connectwallet <pubkey>.`)
+      .then(() => console.log(`Sent error message to ${chatId}`))
+      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
+  }
+});
+
+// Handle /removeliquidity (with wallet check, similar to above)
+bot.onText(/\/removeliquidity (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  console.log(`User ${chatId} sent /removeliquidity`);
+  const params = match[1].split(' ');
+  if (params.length < 3) {
+    return bot.sendMessage(chatId, 'Usage: /removeliquidity <pool_address> <position_id> <remove_percentage> (0-100)');
+  }
+  try {
+    const walletPubkey = getUserWallet(chatId); // Throws if no wallet
+    console.log(`Removing liquidity for user ${chatId} with wallet ${walletPubkey.toString()}`);
+    const pool = params[0];
+    const positionId = params[1];
+    const percentage = params[2];
+    await sendTransactionLink(chatId, 'removeliquidity', pool, { positionId, percentage });
+  } catch (error) {
+    console.log(`Error removing liquidity for user ${chatId}: ${error.message}`);
+    bot.sendMessage(chatId, `Error: ${error.message}. Connect wallet first with /connectwallet <pubkey>.`)
+      .then(() => console.log(`Sent error message to ${chatId}`))
+      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
+  }
+});
 
 // Landing page
 app.get('/', (req, res) => {
@@ -48,7 +128,7 @@ app.get('/', (req, res) => {
         <title>Saros DLMM Bot</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,400;500&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
 
           :root {
             --bg-color: #f5f5f5;
@@ -66,7 +146,7 @@ app.get('/', (req, res) => {
             --button-bg: #0d6efd;
           }
           body {
-            font-family: 'Bricolage+Grotesque', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            font-family: "Bricolage Grotesque", sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -125,7 +205,7 @@ app.get('/', (req, res) => {
             box-shadow: var(--shadow);
             margin: 20px auto;
             width: 100%;
-            max-width: 800px; /* Limit card width */
+            max-width: 800px;
             transition: background-color 0.3s ease, color 0.3s ease;
           }
           h1 {
@@ -146,18 +226,19 @@ app.get('/', (req, res) => {
           }
           .features {
             display: flex;
-            flex-direction: column; /* Column on mobile, grid on desktop */
+            flex-direction: row; /* Row on desktop */
             gap: 20px;
             margin: 30px 0;
             align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
           }
           .feature-card {
             background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(0, 122, 255, 0.05));
             padding: 20px;
             border-radius: 10px;
             transition: transform 0.2s;
-            width: 100%;
-            max-width: 300px; /* Limit feature card width */
+            width: 300px; /* Fixed width for row layout */
           }
           .feature-card:hover {
             transform: translateY(-5px);
@@ -233,7 +314,7 @@ app.get('/', (req, res) => {
             .card {
               padding: 15px;
               margin: 10px auto;
-              max-width: none; /* Full width on mobile */
+              max-width: none;
             }
             h1 {
               font-size: 1.8em;
@@ -249,8 +330,9 @@ app.get('/', (req, res) => {
               font-size: 14px;
             }
             .features {
-              flex-direction: column;
+              flex-direction: column; /* Column on mobile */
               gap: 15px;
+              align-items: center;
             }
             .feature-card {
               max-width: 100%;
