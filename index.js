@@ -1,4 +1,122 @@
- --card-color: #2a2a2a;
+// index.js: Telegram bot for Saros DLMM liquidity pool management (webhook mode with Express)
+import express from 'express';
+import TelegramBot from 'node-telegram-bot-api';
+import { PublicKey, Connection } from '@solana/web3.js';
+import { connection, dlmm, userWallets, getUserWallet } from './utils.js';
+
+// Initialize Express app
+const app = express();
+app.use(express.json()); // Parse JSON bodies from Telegram
+
+// Telegram Bot Token
+const token = '8489885216:AAHKortMPZFzWM1tIECjFW41YSXVORpl9dA';
+const bot = new TelegramBot(token, { polling: false }); // Webhook mode, polling disabled
+
+// Basic command handlers
+bot.onText(/\/start/, (msg) => {
+  const chatId = msg.chat.id;
+  const options = {
+    reply_markup: {
+      keyboard: [['Connect Wallet'], ['View Pools', 'Create Position'], ['Add Liquidity', 'Remove Liquidity'], ['Monitor Pool'], ['Help']],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    }
+  };
+  bot.sendMessage(chatId, '<b>Welcome to Saros DLMM Bot!</b> Choose a command:', { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+  const helpText = '<b>Available Commands:</b>\n' +
+    '/connectwallet <pubkey> - <i>Link your Solana wallet</i>\n' +
+    '/pools - <i>List available pools</i>\n' +
+    '/createposition <pool> <amount> - <i>Create LP position</i>\n' +
+    '/monitor <pool> - <i>Watch pool for changes</i>\n' +
+    '/addliquidity <pool> <amount> - <i>Add liquidity to a pool</i>\n' +
+    '/removeliquidity <pool> <amount> - <i>Remove liquidity from a pool</i>';
+  bot.sendMessage(chatId, helpText, { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/connectwallet (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const pubkey = match[1];
+  try {
+    new PublicKey(pubkey);
+    userWallets[chatId] = pubkey;
+    bot.sendMessage(chatId, `Wallet connected: ${pubkey.substring(0, 4)}...${pubkey.slice(-4)}`, { parse_mode: 'HTML' });
+  } catch (err) {
+    bot.sendMessage(chatId, 'Invalid Solana public key. Try again with /connectwallet <pubkey>.', { parse_mode: 'HTML' });
+  }
+});
+
+bot.onText(/\/pools/, (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, 'Mock pools: <b>Pool1</b>, <b>Pool2</b>, <b>Pool3</b> (Full list coming soon!)', { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/createposition (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const [pool, amount] = match[1].split(' ');
+  if (!pool || !amount) return bot.sendMessage(chatId, 'Usage: /createposition <pool> <amount>', { parse_mode: 'HTML' });
+  bot.sendMessage(chatId, `Creating position in <b>${pool}</b> with <b>${amount}</b> (mock TX).`, { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/monitor (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const pool = match[1];
+  bot.sendMessage(chatId, `Monitoring <b>${pool}</b>. Alerts TBD.`, { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/addliquidity (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const [pool, amount] = match[1].split(' ');
+  if (!pool || !amount) return bot.sendMessage(chatId, 'Usage: /addliquidity <pool> <amount>', { parse_mode: 'HTML' });
+  bot.sendMessage(chatId, `Adding <b>${amount}</b> liquidity to <b>${pool}</b> (mock TX).`, { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/removeliquidity (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const [pool, amount] = match[1].split(' ');
+  if (!pool || !amount) return bot.sendMessage(chatId, 'Usage: /removeliquidity <pool> <amount>', { parse_mode: 'HTML' });
+  bot.sendMessage(chatId, `Removing <b>${amount}</b> liquidity from <b>${pool}</b> (mock TX).`, { parse_mode: 'HTML' });
+});
+
+// Catch-all for unknown messages (optional, for debugging)
+bot.on('message', (msg) => {
+  if (!msg.text || msg.text.startsWith('/')) return; // Ignore non-commands
+  const chatId = msg.chat.id;
+  console.log(`Unhandled message from ${msg.from.username}: ${msg.text}`);
+  bot.sendMessage(chatId, 'Sorry, I didn\'t understand that. Try /help.', { parse_mode: 'HTML' });
+});
+
+// Webhook endpoint
+app.post('/bot', (req, res) => {
+  console.log('Received webhook update:', req.body);
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+// Landing page
+app.get('/', (req, res) => {
+  const isDlmmActive = dlmm !== null && dlmm !== undefined; // Check dlmm status
+  res.send(`
+    <html>
+      <head>
+        <title>Saros DLMM Bot</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+
+          :root {
+            --bg-color: #f5f5f5;
+            --card-color: #ffffff;
+            --text-color: #1c2526;
+            --text-secondary: #4a4a4a;
+            --button-bg: #007aff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --card-color: #2a2a2a;
             --text-color: #ffffff;
             --text-secondary: #b0b0b0;
             --button-bg: #0d6efd;
@@ -47,12 +165,17 @@
           }
           .container {
             flex: 1 0 auto;
-            max-width: 1200px; /* Increased from 800px for wider vibe */
-            width: 90%; /* Responsive width */
+            width: 90%;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            text-align: center;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+          }
+          .card, .demo-container {
+            width: 100%;
           }
           .card {
             background-color: var(--card-color);
@@ -122,7 +245,7 @@
           }
           .demo-container {
             margin: 30px 0;
-            max-width: 100%; /* Wider demo container */
+            max-width: 100%;
           }
           .demo-video {
             position: relative;
@@ -161,34 +284,32 @@
             text-decoration: underline;
           }
 
+          @media (min-width: 601px) {
+            .container {
+              flex-direction: row;
+              flex-wrap: wrap;
+              justify-content: space-between;
+            }
+            .card, .demo-container {
+              flex: 1;
+              min-width: 300px;
+              margin: 10px;
+            }
+          }
+
           @media (max-width: 600px) {
             .container {
               padding: 10px;
-              width: 95%; /* Slightly wider on mobile */
+              width: 95%;
             }
-            .card {
+            .card, .demo-container {
               padding: 15px;
               margin: 10px 0;
             }
-            h1 {
-              font-size: 1.8em;
-            }
-            h2 {
-              font-size: 1.4em;
-            }
-            p {
-              font-size: 1em;
-            }
-            button {
-              padding: 10px 20px;
-              font-size: 14px;
-            }
-            .features {
-              grid-template-columns: 1fr;
-            }
-            .demo-container {
-              max-width: 100%;
-            }
+            h1 { font-size: 1.8em; }
+            h2 { font-size: 1.4em; }
+            p { font-size: 1em; }
+            button { padding: 10px 20px; font-size: 14px; }
           }
         </style>
       </head>
@@ -286,6 +407,11 @@ bot.setWebHook(webhookUrl).then(() => {
   console.log('Webhook set successfully');
 }).catch(err => {
   console.error('Error setting webhook:', err);
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Bot server running on port ${port}`);
 });
 
 // Start the server
