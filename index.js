@@ -1,71 +1,4 @@
-// index.js: Telegram bot for Saros DLMM liquidity pool management (webhook mode with Express)
-import express from 'express';
-import TelegramBot from 'node-telegram-bot-api';
-import { PublicKey, Connection } from '@solana/web3.js';
-import { connection, dlmm, userWallets, getUserWallet } from './utils.js';
-
-// Initialize Express app
-const app = express();
-app.use(express.json()); // Parse JSON bodies from Telegram
-
-// Telegram Bot Token
-const token = '8489885216:AAHKortMPZFzWM1tIECjFW41YSXVORpl9dA';
-const bot = new TelegramBot(token, { polling: false }); // Webhook mode, polling disabled
-
-// Basic command handlers
-bot.onText(/\/start/, (msg) => {
-  const chatId = msg.chat.id;
-  console.log(`Start command from ${msg.from.username || msg.from.first_name} (ID: ${chatId})`);
-  bot.sendMessage(chatId, 'Welcome to Saros DLMM Bot! Use /help for commands. Your wallet: Not connected yet.');
-});
-
-bot.onText(/\/help/, (msg) => {
-  const chatId = msg.chat.id;
-  const helpText = `
-/connectwallet <pubkey> - Link your Solana wallet
-/pools - List available pools
-/createposition <pool> <amount> - Create LP position
-/monitor <pool> - Watch pool for changes
-  `;
-  bot.sendMessage(chatId, helpText);
-});
-
-// Catch-all for unknown messages (optional, for debugging)
-bot.on('message', (msg) => {
-  if (!msg.text || msg.text.startsWith('/')) return; // Ignore non-commands
-  const chatId = msg.chat.id;
-  console.log(`Unhandled message from ${msg.from.username}: ${msg.text}`);
-  bot.sendMessage(chatId, 'Sorry, I didn\'t understand that. Try /help.');
-});
-
-// Webhook endpoint
-app.post('/bot', (req, res) => {
-  console.log('Received webhook update:', req.body);
-  bot.processUpdate(req.body);
-  res.sendStatus(200);
-});
-
-// Landing page
-app.get('/', (req, res) => {
-  const isDlmmActive = dlmm !== null && dlmm !== undefined; // Check dlmm status
-  res.send(`
-    <html>
-      <head>
-        <title>Saros DLMM Bot</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
-
-          :root {
-            --bg-color: #f5f5f5;
-            --card-color: #ffffff;
-            --text-color: #1c2526;
-            --text-secondary: #4a4a4a;
-            --button-bg: #007aff;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          }
-          [data-theme="dark"] {
-            --bg-color: #1a1a1a;
-            --card-color: #2a2a2a;
+ --card-color: #2a2a2a;
             --text-color: #ffffff;
             --text-secondary: #b0b0b0;
             --button-bg: #0d6efd;
@@ -256,6 +189,421 @@ app.get('/', (req, res) => {
             .demo-container {
               max-width: 100%;
             }
+          }
+        </style>
+      </head>
+      <body>
+        <header>
+          <h1>Saros DLMM Bot</h1>
+          <button class="toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+        </header>
+        <div class="container">
+          <div class="card">
+            <h1>Saros DLMM Telegram Bot</h1>
+            <p>Empower your DeFi journey with seamless liquidity management on Solana's Saros DLMM. Built for retail LPs, this bot offers mobile-first tools to create positions, add/remove liquidity, and monitor pools in real-time—all from Telegram.</p>
+            <a href="https://t.me/saroslp_bot" target="_blank"><button>Test the Bot</button></a>
+          </div>
+
+          <div class="card">
+            <h2>What Can It Do?</h2>
+            <p>Designed for ease and security, the bot handles complex DLMM tasks with simple commands. No apps, no wallets—just chat and trade.</p>
+            <div class="features">
+              <div class="feature-card">
+                <h3>Connect Wallet</h3>
+                <p>Securely link your Solana wallet in seconds. No private keys shared.</p>
+              </div>
+              <div class="feature-card">
+                <h3>Manage Positions</h3>
+                <p>Create, add, or remove liquidity with one command. Mock TXs for demo; real integration coming.</p>
+              </div>
+              <div class="feature-card">
+                <h3>Real-Time Monitoring</h3>
+                <p>Get alerts on pool changes and fees. Stay ahead of impermanent loss.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Security & Trust</h2>
+            <p>Your funds are safe—bot uses unsigned TXs for wallet signing. Rate-limited to prevent spam, and deployed on Render for 24/7 uptime. Built with Node.js, Express, and Solana Web3.js for reliability.</p>
+            <p><strong>Ready for Testnet</strong>: Mock features now; full Mainnet after validation. ${isDlmmActive ? 'DLMM SDK active.' : 'DLMM SDK unavailable (demo mode).'}</p>
+          </div>
+
+          <div class="demo-container">
+            <h2>Watch the Demo</h2>
+            <div class="demo-video">
+              <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Saros DLMM Bot Demo" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <p>Explore how to use the bot with this quick video guide.</p>
+          </div>
+
+          <div class="card">
+            <h2>How to Use</h2>
+            <ol style="text-align: left; max-width: 500px; margin: 0 auto;">
+              <li>Click "Test the Bot" to start in Telegram.</li>
+              <li>Send /start to see the menu.</li>
+              <li>Connect your wallet with /connectwallet <pubkey>.</li>
+              <li>Use /pools for mock pools, /createposition for positions, etc.</li>
+              <li>Monitor with /monitor <pool_address>.</li>
+            </ol>
+          </div>
+        </div>
+        <footer>
+          <p>&copy; 2025 Saros DLMM Bot | <a href="https://github.com/Ayoolisa/Saros-DLMM-Telegram-Bot" target="_blank">GitHub</a> | Built with ❤️ by Ayoolisa</p>
+        </footer>
+
+        <script>
+          const toggle = document.querySelector('.toggle');
+          if (toggle) {
+            toggle.addEventListener('click', () => {
+              const body = document.body;
+              const currentTheme = body.dataset.theme || 'light';
+              const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+              body.dataset.theme = newTheme;
+              toggle.textContent = newTheme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode';
+              localStorage.setItem('theme', newTheme);
+            });
+          } else {
+            console.error('Toggle button not found');
+          }
+
+          // Load saved theme
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme) {
+            document.body.dataset.theme = savedTheme;
+            if (toggle) toggle.textContent = savedTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+          }
+        </script>
+      </body>
+    </html>
+  `);
+});
+
+// Set webhook on bot startup
+const port = process.env.PORT || 10000;
+const webhookUrl = `https://saros-bot.onrender.com/bot`; // Replace with your Render URL
+bot.setWebHook(webhookUrl).then(() => {
+  console.log('Webhook set successfully');
+}).catch(err => {
+  console.error('Error setting webhook:', err);
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Bot server running on port ${port}`);
+});
+// index.js: Telegram bot for Saros DLMM liquidity pool management (webhook mode with Express)
+import express from 'express';
+import TelegramBot from 'node-telegram-bot-api';
+import { PublicKey, Connection } from '@solana/web3.js';
+import { connection, dlmm, userWallets, getUserWallet } from './utils.js';
+
+// Initialize Express app
+const app = express();
+app.use(express.json()); // Parse JSON bodies from Telegram
+
+// Telegram Bot Token
+const token = '8489885216:AAHKortMPZFzWM1tIECjFW41YSXVORpl9dA';
+const bot = new TelegramBot(token, { polling: false }); // Webhook mode, polling disabled
+
+// Basic command handlers
+bot.onText(/\/start/, (msg) => {
+  const chatId = msg.chat.id;
+  const options = {
+    reply_markup: {
+      keyboard: [['Connect Wallet'], ['View Pools', 'Create Position'], ['Add Liquidity', 'Remove Liquidity'], ['Monitor Pool'], ['Help']],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    }
+  };
+  bot.sendMessage(chatId, '<b>Welcome to Saros DLMM Bot!</b> Choose a command:', { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+  const helpText = '<b>Available Commands:</b>\n' +
+    '/connectwallet <pubkey> - <i>Link your Solana wallet</i>\n' +
+    '/pools - <i>List available pools</i>\n' +
+    '/createposition <pool> <amount> - <i>Create LP position</i>\n' +
+    '/monitor <pool> - <i>Watch pool for changes</i>\n' +
+    '/addliquidity <pool> <amount> - <i>Add liquidity to a pool</i>\n' +
+    '/removeliquidity <pool> <amount> - <i>Remove liquidity from a pool</i>';
+  bot.sendMessage(chatId, helpText, { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/connectwallet (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const pubkey = match[1];
+  try {
+    new PublicKey(pubkey);
+    userWallets[chatId] = pubkey;
+    bot.sendMessage(chatId, `Wallet connected: ${pubkey.substring(0, 4)}...${pubkey.slice(-4)}`, { parse_mode: 'HTML' });
+  } catch (err) {
+    bot.sendMessage(chatId, 'Invalid Solana public key. Try again with /connectwallet <pubkey>.', { parse_mode: 'HTML' });
+  }
+});
+
+bot.onText(/\/pools/, (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, 'Mock pools: <b>Pool1</b>, <b>Pool2</b>, <b>Pool3</b> (Full list coming soon!)', { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/createposition (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const [pool, amount] = match[1].split(' ');
+  if (!pool || !amount) return bot.sendMessage(chatId, 'Usage: /createposition <pool> <amount>', { parse_mode: 'HTML' });
+  bot.sendMessage(chatId, `Creating position in <b>${pool}</b> with <b>${amount}</b> (mock TX).`, { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/monitor (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const pool = match[1];
+  bot.sendMessage(chatId, `Monitoring <b>${pool}</b>. Alerts TBD.`, { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/addliquidity (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const [pool, amount] = match[1].split(' ');
+  if (!pool || !amount) return bot.sendMessage(chatId, 'Usage: /addliquidity <pool> <amount>', { parse_mode: 'HTML' });
+  bot.sendMessage(chatId, `Adding <b>${amount}</b> liquidity to <b>${pool}</b> (mock TX).`, { parse_mode: 'HTML' });
+});
+
+bot.onText(/\/removeliquidity (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const [pool, amount] = match[1].split(' ');
+  if (!pool || !amount) return bot.sendMessage(chatId, 'Usage: /removeliquidity <pool> <amount>', { parse_mode: 'HTML' });
+  bot.sendMessage(chatId, `Removing <b>${amount}</b> liquidity from <b>${pool}</b> (mock TX).`, { parse_mode: 'HTML' });
+});
+
+// Catch-all for unknown messages (optional, for debugging)
+bot.on('message', (msg) => {
+  if (!msg.text || msg.text.startsWith('/')) return; // Ignore non-commands
+  const chatId = msg.chat.id;
+  console.log(`Unhandled message from ${msg.from.username}: ${msg.text}`);
+  bot.sendMessage(chatId, 'Sorry, I didn\'t understand that. Try /help.', { parse_mode: 'HTML' });
+});
+
+// Webhook endpoint
+app.post('/bot', (req, res) => {
+  console.log('Received webhook update:', req.body);
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+// Landing page
+app.get('/', (req, res) => {
+  const isDlmmActive = dlmm !== null && dlmm !== undefined; // Check dlmm status
+  res.send(`
+    <html>
+      <head>
+        <title>Saros DLMM Bot</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+
+          :root {
+            --bg-color: #f5f5f5;
+            --card-color: #ffffff;
+            --text-color: #1c2526;
+            --text-secondary: #4a4a4a;
+            --button-bg: #007aff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --card-color: #2a2a2a;
+            --text-color: #ffffff;
+            --text-secondary: #b0b0b0;
+            --button-bg: #0d6efd;
+          }
+          body {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+          }
+          header {
+            background: var(--card-color);
+            padding: 10px 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          header h1 {
+            font-size: 1.5em;
+            margin: 0;
+            font-weight: 400;
+            color: var(--text-color);
+          }
+          .toggle {
+            background: var(--button-bg);
+            color: var(--card-color);
+            border: none;
+            border-radius: 20px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: opacity 0.2s;
+          }
+          .toggle:hover {
+            opacity: 0.8;
+          }
+          .container {
+            flex: 1 0 auto;
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+          }
+          .card, .demo-container {
+            width: 100%;
+          }
+          .card {
+            background-color: var(--card-color);
+            color: var(--text-color);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin: 20px 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+          }
+          h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            font-weight: 400;
+            color: var(--text-color);
+          }
+          h2 {
+            font-size: 1.6em;
+            margin-top: 30px;
+            font-weight: 400;
+            color: var(--text-color);
+          }
+          p {
+            font-size: 1.1em;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: 15px 0;
+          }
+          .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+          }
+          .feature-card {
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(0, 122, 255, 0.05));
+            padding: 20px;
+            border-radius: 10px;
+            transition: transform 0.2s;
+            color: var(--text-color);
+          }
+          .feature-card:hover {
+            transform: translateY(-5px);
+          }
+          a {
+            text-decoration: none;
+          }
+          button {
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+            animation: pulse 2s infinite;
+          }
+          button:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+          }
+          @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 122, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
+          }
+          .demo-container {
+            margin: 30px 0;
+            max-width: 100%;
+          }
+          .demo-video {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+          }
+          .demo-video iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+          }
+          footer {
+            flex-shrink: 0;
+            background: var(--card-color);
+            padding: 10px 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            margin-top: auto;
+          }
+          footer p {
+            font-size: 0.9em;
+            margin: 0;
+            color: var(--text-secondary);
+          }
+          footer a {
+            color: var(--button-bg);
+            text-decoration: none;
+          }
+          footer a:hover {
+            text-decoration: underline;
+          }
+
+          @media (min-width: 601px) {
+            .container {
+              flex-direction: row;
+              flex-wrap: wrap;
+              justify-content: space-between;
+            }
+            .card, .demo-container {
+              flex: 1;
+              min-width: 300px;
+              margin: 10px;
+            }
+          }
+
+          @media (max-width: 600px) {
+            .container {
+              padding: 10px;
+              width: 95%;
+            }
+            .card, .demo-container {
+              padding: 15px;
+              margin: 10px 0;
+            }
+            h1 { font-size: 1.8em; }
+            h2 { font-size: 1.4em; }
+            p { font-size: 1em; }
+            button { padding: 10px 20px; font-size: 14px; }
           }
         </style>
       </head>
