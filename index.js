@@ -188,7 +188,7 @@ app.get('/', (req, res) => {
           }
           .container {
             flex: 1 0 auto;
-            max-width: 1200px;
+            max-width: 1400px;
             width: 90%;
             margin: 0 auto;
             padding: 20px;
@@ -205,7 +205,7 @@ app.get('/', (req, res) => {
             box-shadow: var(--shadow);
             margin: 20px auto;
             width: 100%;
-            max-width: 800px;
+            max-width: 1600px;
             transition: background-color 0.3s ease, color 0.3s ease;
           }
           h1 {
