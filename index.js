@@ -395,3 +395,8 @@ bot
 app.listen(port, () => {
   console.log(`Bot server running on port ${port}`);
 });
+
+
+bot.on('webhook_error', (error) => {
+  console.error('Webhook error:', error.message);
+});
