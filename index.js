@@ -322,7 +322,7 @@ app.get('/', (req, res) => {
 
 // Set webhook on bot startup
 const port = process.env.PORT || 10000;
-const webhookUrl = `https://saros-bot.onrender.com/bot`; // Replace with your Render URL
+const webhookUrl = `https://saros-bot.onrender.com/bot`;
 bot.setWebHook(webhookUrl).then(() => {
   console.log('Webhook set successfully');
 }).catch(err => {
