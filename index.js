@@ -12,124 +12,68 @@ app.use(express.json()); // Parse JSON bodies from Telegram
 const token = '8489885216:AAHKortMPZFzWM1tIECjFW41YSXVORpl9dA';
 const bot = new TelegramBot(token, { polling: false }); // Webhook mode, polling disabled
 
+// Error handling
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error.message);
+});
+
+// Helper function for mock transaction links
+async function sendTransactionLink(chatId, command, pool, params) {
+  try {
+    const walletPubkey = getUserWallet(chatId);
+    console.log(`Building mock TX for ${command} - user ${chatId} with wallet ${walletPubkey.toString()}`);
+
+    // Mock TX with command details
+    const mockTx = {
+      command,
+      pool,
+      params,
+      timestamp: new Date().toISOString()
+    };
+    const base64Tx = Buffer.from(JSON.stringify(mockTx)).toString('base64');
+    const deepLink = `solana://transaction?message=${base64Tx}&mock=true`;
+    bot.sendMessage(chatId, `Sign this mock transaction in your wallet:\n${deepLink}\n(Note: Mock only—use Phantom for demo)`)
+      .then(() => console.log(`Sent mock TX link for ${command} to ${chatId}`))
+      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
+  } catch (error) {
+    console.log(`Error building mock TX for user ${chatId}: ${error.message}`);
+    bot.sendMessage(chatId, `Error: ${error.message}. Connect wallet first with /connectwallet <pubkey>.`)
+      .then(() => console.log(`Sent error message to ${chatId}`))
+      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
+  }
+}
+
 // Webhook endpoint
 app.post('/bot', (req, res) => {
-  console.log('Received webhook update:', JSON.stringify(req.body, null, 2)); // Log full update
+  console.log('=== Webhook Received ===');
+  console.log('Full update:', JSON.stringify(req.body, null, 2));
+  
+  if (req.body.message) {
+    console.log('Message type:', req.body.message.text);
+    console.log('Chat ID:', req.body.message.chat.id);
+  }
+  
   bot.processUpdate(req.body);
+  console.log('Update processed');
+  console.log('========================');
   res.sendStatus(200);
 });
 
-// Handle /help (with validation)
-bot.onText(/\/help/, (msg) => {
-  const chatId = msg.chat.id;
-  console.log(`User ${chatId} sent /help`);
-  bot.sendMessage(chatId, 'Saros LP Bot manages DLMM positions.\n1. Connect: /connectwallet <pubkey>\n2. List pools: /pools\n3. Create: /createposition <pool> <lower> <upper> <liquidity>\n4. Manage: /addliquidity, /removeliquidity\n5. Monitor: /monitor <pool>')
-    .then(() => console.log(`Sent help message to ${chatId}`))
-    .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
-});
-
-// Handle /connectwallet (with pubkey validation)
-bot.onText(/\/connectwallet (.+)/, (msg, match) => {
-  const chatId = msg.chat.id;
-  console.log(`User ${chatId} sent /connectwallet`);
-  const pubkeyStr = match[1];
-  if (!pubkeyStr || pubkeyStr.trim() === '') {
-    return bot.sendMessage(chatId, 'Usage: /connectwallet <your_solana_pubkey> (e.g., /connectwallet YourPubKeyHere1234567890)');
-  }
-  try {
-    const pubkey = new PublicKey(pubkeyStr.trim());
-    userWallets.set(chatId, pubkey);
-    bot.sendMessage(chatId, `Wallet connected: ${pubkey.toString()}. Approve txs in your wallet app.`)
-      .then(() => console.log(`Sent connect message to ${chatId}`))
-      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
-  } catch (error) {
-    bot.sendMessage(chatId, `Invalid pubkey: ${error.message}`)
-      .then(() => console.log(`Sent invalid pubkey error to ${chatId}`))
-      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
-  }
-});
-
-// Handle /addliquidity (with wallet check)
-bot.onText(/\/addliquidity (.+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  console.log(`User ${chatId} sent /addliquidity`);
-  const params = match[1].split(' ');
-  if (params.length < 3) {
-    return bot.sendMessage(chatId, 'Usage: /addliquidity <pool_address> <amount_x> <amount_y>');
-  }
-  try {
-    const walletPubkey = getUserWallet(chatId); // Throws if no wallet
-    console.log(`Adding liquidity for user ${chatId} with wallet ${walletPubkey.toString()}`);
-    const pool = params[0];
-    const amountX = params[1];
-    const amountY = params[2];
-    await sendTransactionLink(chatId, 'addliquidity', pool, { amountX, amountY });
-  } catch (error) {
-    console.log(`Error adding liquidity for user ${chatId}: ${error.message}`);
-    bot.sendMessage(chatId, `Error: ${error.message}. Connect wallet first with /connectwallet <pubkey>.`)
-      .then(() => console.log(`Sent error message to ${chatId}`))
-      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
-  }
-});
-
-// Handle /createposition (with wallet check, similar to /addliquidity)
-bot.onText(/\/createposition (.+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  console.log(`User ${chatId} sent /createposition`);
-  const params = match[1].split(' ');
-  if (params.length < 4) {
-    return bot.sendMessage(chatId, 'Usage: /createposition <pool_address> <lower_price> <upper_price> <liquidity_amount>');
-  }
-  try {
-    const walletPubkey = getUserWallet(chatId); // Throws if no wallet
-    console.log(`Creating position for user ${chatId} with wallet ${walletPubkey.toString()}`);
-    const pool = params[0];
-    const lowerPrice = params[1];
-    const upperPrice = params[2];
-    const liquidity = params[3];
-    await sendTransactionLink(chatId, 'createposition', pool, { lowerPrice, upperPrice, liquidity });
-  } catch (error) {
-    console.log(`Error creating position for user ${chatId}: ${error.message}`);
-    bot.sendMessage(chatId, `Error: ${error.message}. Connect wallet first with /connectwallet <pubkey>.`)
-      .then(() => console.log(`Sent error message to ${chatId}`))
-      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
-  }
-});
-
-// Handle /removeliquidity (with wallet check, similar to above)
-bot.onText(/\/removeliquidity (.+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  console.log(`User ${chatId} sent /removeliquidity`);
-  const params = match[1].split(' ');
-  if (params.length < 3) {
-    return bot.sendMessage(chatId, 'Usage: /removeliquidity <pool_address> <position_id> <remove_percentage> (0-100)');
-  }
-  try {
-    const walletPubkey = getUserWallet(chatId); // Throws if no wallet
-    console.log(`Removing liquidity for user ${chatId} with wallet ${walletPubkey.toString()}`);
-    const pool = params[0];
-    const positionId = params[1];
-    const percentage = params[2];
-    await sendTransactionLink(chatId, 'removeliquidity', pool, { positionId, percentage });
-  } catch (error) {
-    console.log(`Error removing liquidity for user ${chatId}: ${error.message}`);
-    bot.sendMessage(chatId, `Error: ${error.message}. Connect wallet first with /connectwallet <pubkey>.`)
-      .then(() => console.log(`Sent error message to ${chatId}`))
-      .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
-  }
-});
-
 // Landing page
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   const isDlmmActive = dlmm !== null && dlmm !== undefined; // Check dlmm status
   res.send(`
     <html>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Essential for mobile scaling -->
         <title>Saros DLMM Bot</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
-
+         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
           :root {
             --bg-color: #f5f5f5;
             --card-color: #ffffff;
@@ -146,7 +90,7 @@ app.get('/', (req, res) => {
             --button-bg: #0d6efd;
           }
           body {
-            font-family: "Bricolage Grotesque", sans-serif;
+            font-family: 'Bricolage Grotesque', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -167,6 +111,7 @@ app.get('/', (req, res) => {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-direction: row; /* Row on all screens */
           }
           header h1 {
             font-size: 1.5em;
@@ -188,14 +133,14 @@ app.get('/', (req, res) => {
           }
           .container {
             flex: 1 0 auto;
-            max-width: 1400px;
+            max-width: 1200px;
             width: 90%;
             margin: 0 auto;
             padding: 20px;
             text-align: center;
             box-sizing: border-box;
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Column for all containers */
           }
           .card {
             background-color: var(--card-color);
@@ -205,7 +150,7 @@ app.get('/', (req, res) => {
             box-shadow: var(--shadow);
             margin: 20px auto;
             width: 100%;
-            max-width: 1600px;
+            max-width: 800px;
             transition: background-color 0.3s ease, color 0.3s ease;
           }
           h1 {
@@ -238,7 +183,7 @@ app.get('/', (req, res) => {
             padding: 20px;
             border-radius: 10px;
             transition: transform 0.2s;
-            width: 300px; /* Fixed width for row layout */
+            width: 300px;
           }
           .feature-card:hover {
             transform: translateY(-5px);
@@ -377,7 +322,11 @@ app.get('/', (req, res) => {
           <div class="card">
             <h2>Security & Trust</h2>
             <p>Your funds are safe—bot uses unsigned TXs for wallet signing. Rate-limited to prevent spam, and deployed on Render for 24/7 uptime. Built with Node.js, Express, and Solana Web3.js for reliability.</p>
-            <p><strong>Ready for Testnet</strong>: Mock features now; full Mainnet after validation. ${isDlmmActive ? 'DLMM SDK active.' : 'DLMM SDK unavailable (demo mode).'}</p>
+            <p><strong>Ready for Testnet</strong>: Mock features now; full Mainnet after validation. ${
+              isDlmmActive
+                ? "DLMM SDK active."
+                : "DLMM SDK unavailable (demo mode)."
+            }</p>
           </div>
 
           <div class="demo-container">
@@ -433,11 +382,14 @@ app.get('/', (req, res) => {
 // Set webhook on bot startup
 const port = process.env.PORT || 10000;
 const webhookUrl = `https://saros-bot.onrender.com/bot`;
-bot.setWebHook(webhookUrl).then(() => {
-  console.log('Webhook set successfully');
-}).catch(err => {
-  console.error('Error setting webhook:', err);
-});
+bot
+  .setWebHook(webhookUrl)
+  .then(() => {
+    console.log("Webhook set successfully");
+  })
+  .catch((err) => {
+    console.error("Error setting webhook:", err);
+  });
 
 // Start the server
 app.listen(port, () => {
