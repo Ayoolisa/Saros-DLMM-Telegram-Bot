@@ -14,10 +14,30 @@ const bot = new TelegramBot(token, { polling: false }); // Webhook mode, polling
 
 // Webhook endpoint
 app.post('/bot', (req, res) => {
-  console.log('Received webhook update:', req.body);
+  console.log('Received webhook update:', JSON.stringify(req.body, null, 2)); // Log full update
   bot.processUpdate(req.body);
   res.sendStatus(200);
 });
+
+// Handle /start (add logging)
+bot.onText(/\/start/, (msg) => {
+  const chatId = msg.chat.id;
+  console.log(`User ${chatId} sent /start - Processing response`);
+  bot.sendMessage(chatId, 'Welcome to Saros LP Bot! Commands:\n/connectwallet <your_solana_pubkey>\n/pools\n/createposition <pool_address> <lower_price> <upper_price> <liquidity_amount>\n/addliquidity <pool_address> <amount_x> <amount_y>\n/removeliquidity <pool_address> <position_id> <remove_percentage>\n/monitor <pool_address>\n/help')
+    .then(() => console.log(`Sent welcome message to ${chatId}`))
+    .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
+});
+
+// Do the same for other handlers, e.g., /pools
+bot.onText(/\/pools/, async (msg) => {
+  const chatId = msg.chat.id;
+  console.log(`User ${chatId} sent /pools - Processing response`);
+  bot.sendMessage(chatId, 'Mock DLMM Pools (devnet limited; real pools via Saros explorer):\n1. Address: 9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin (SOL/USDC example)\n2. Address: 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU (Mock pool for testing)')
+    .then(() => console.log(`Sent pools message to ${chatId}`))
+    .catch((error) => console.error(`SendMessage error for ${chatId}: ${error.message}`));
+});
+
+// Add .then/.catch to all other bot.sendMessage calls similarly
 
 // Landing page
 app.get('/', (req, res) => {
@@ -26,8 +46,9 @@ app.get('/', (req, res) => {
     <html>
       <head>
         <title>Saros DLMM Bot</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,400;500&display=swap');
 
           :root {
             --bg-color: #f5f5f5;
@@ -45,7 +66,7 @@ app.get('/', (req, res) => {
             --button-bg: #0d6efd;
           }
           body {
-            font-family: 'Bricolage Grotesque', sans-serif;
+            font-family: 'Bricolage+Grotesque', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -71,7 +92,6 @@ app.get('/', (req, res) => {
             font-size: 1.5em;
             margin: 0;
             font-weight: 400;
-            color: var(--text-color);
           }
           .toggle {
             background: var(--button-bg);
@@ -88,12 +108,14 @@ app.get('/', (req, res) => {
           }
           .container {
             flex: 1 0 auto;
-            max-width: 1200px; /* Increased from 800px for wider vibe */
-            width: 90%; /* Responsive width */
+            max-width: 1200px;
+            width: 90%;
             margin: 0 auto;
             padding: 20px;
             text-align: center;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
           }
           .card {
             background-color: var(--card-color);
@@ -101,20 +123,20 @@ app.get('/', (req, res) => {
             padding: 20px;
             border-radius: 15px;
             box-shadow: var(--shadow);
-            margin: 20px 0;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 800px; /* Limit card width */
             transition: background-color 0.3s ease, color 0.3s ease;
           }
           h1 {
             font-size: 2em;
             margin-bottom: 10px;
             font-weight: 400;
-            color: var(--text-color);
           }
           h2 {
             font-size: 1.6em;
             margin-top: 30px;
             font-weight: 400;
-            color: var(--text-color);
           }
           p {
             font-size: 1.1em;
@@ -123,17 +145,19 @@ app.get('/', (req, res) => {
             margin: 15px 0;
           }
           .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            display: flex;
+            flex-direction: column; /* Column on mobile, grid on desktop */
             gap: 20px;
             margin: 30px 0;
+            align-items: center;
           }
           .feature-card {
             background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(0, 122, 255, 0.05));
             padding: 20px;
             border-radius: 10px;
             transition: transform 0.2s;
-            color: var(--text-color);
+            width: 100%;
+            max-width: 300px; /* Limit feature card width */
           }
           .feature-card:hover {
             transform: translateY(-5px);
@@ -163,7 +187,7 @@ app.get('/', (req, res) => {
           }
           .demo-container {
             margin: 30px 0;
-            max-width: 100%; /* Wider demo container */
+            max-width: 100%;
           }
           .demo-video {
             position: relative;
@@ -192,7 +216,6 @@ app.get('/', (req, res) => {
           footer p {
             font-size: 0.9em;
             margin: 0;
-            color: var(--text-secondary);
           }
           footer a {
             color: var(--button-bg);
@@ -205,11 +228,12 @@ app.get('/', (req, res) => {
           @media (max-width: 600px) {
             .container {
               padding: 10px;
-              width: 95%; /* Slightly wider on mobile */
+              width: 95%;
             }
             .card {
               padding: 15px;
-              margin: 10px 0;
+              margin: 10px auto;
+              max-width: none; /* Full width on mobile */
             }
             h1 {
               font-size: 1.8em;
@@ -225,7 +249,11 @@ app.get('/', (req, res) => {
               font-size: 14px;
             }
             .features {
-              grid-template-columns: 1fr;
+              flex-direction: column;
+              gap: 15px;
+            }
+            .feature-card {
+              max-width: 100%;
             }
             .demo-container {
               max-width: 100%;
